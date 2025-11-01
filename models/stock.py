@@ -15,6 +15,7 @@ class RecommendationDetail(BaseModel):
 class StockResponse(BaseModel):
     """주식 분석 응답 모델"""
     symbol: str
+    company_name: str  # 정식 기업명 (예: "Tesla, Inc.")
     short_term: RecommendationDetail  # 단기 (1일~1주일)
     mid_term: RecommendationDetail    # 중기 (1주일~3개월)
     long_term: RecommendationDetail   # 장기 (3개월~1년)

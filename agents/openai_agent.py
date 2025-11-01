@@ -6,6 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from config import get_search_instruction
 
 # 환경 변수 로드
 load_dotenv()
@@ -86,15 +87,15 @@ class OpenAIAgent:
         self.mcp_sessions.clear()
         self.mcp_tools.clear()
 
-    def get_stock_symbol(self, company: str) -> str:
+    def get_stock_info(self, company: str) -> tuple[str, str]:
         """
-        기업명이나 심볼을 정확한 주식 티커 심볼로 변환
+        기업명이나 심볼을 정확한 주식 티커 심볼과 정식 기업명으로 변환
 
         Args:
             company: 기업명 또는 심볼 (예: "테슬라", "TSLA")
 
         Returns:
-            정확한 주식 티커 심볼 (예: "TSLA")
+            (심볼, 정식 기업명) 튜플 (예: ("TSLA", "Tesla, Inc."))
         """
         response = self.client.chat.completions.create(
             model=self.model,
@@ -102,15 +103,16 @@ class OpenAIAgent:
                 {
                     "role": "system",
                     "content": """당신은 주식 심볼 전문가입니다.
-사용자가 입력한 기업명이나 심볼을 정확한 주식 티커 심볼로 변환해주세요.
-예시:
-- "테슬라" → "TSLA"
-- "엔비디아" → "NVDA"
-- "애플" → "AAPL"
-- "삼성전자" → "005930.KS"
-- "SK하이닉스" → "000660.KS"
+사용자가 입력한 기업명이나 심볼을 정확한 주식 티커 심볼과 정식 기업명으로 변환해주세요.
 
-반드시 심볼만 답변하고 다른 설명은 하지 마세요."""
+예시:
+- "테슬라" → TSLA|Tesla, Inc.
+- "NVDA" → NVDA|NVIDIA Corporation
+- "애플" → AAPL|Apple Inc.
+- "삼성전자" → 005930.KS|Samsung Electronics Co., Ltd.
+- "SK하이닉스" → 000660.KS|SK hynix Inc.
+
+반드시 "심볼|정식기업명" 형식으로만 답변하고 다른 설명은 하지 마세요."""
                 },
                 {
                     "role": "user",
@@ -120,15 +122,18 @@ class OpenAIAgent:
             max_completion_tokens=500
         )
 
-        print(f"[DEBUG] Symbol response finish_reason: {response.choices[0].finish_reason}")
-        print(f"[DEBUG] Symbol response content: '{response.choices[0].message.content}'")
+        print(f"[DEBUG] Stock info response finish_reason: {response.choices[0].finish_reason}")
+        print(f"[DEBUG] Stock info response content: '{response.choices[0].message.content}'")
 
         result = response.choices[0].message.content
-        if result:
-            return result.strip()
+        if result and "|" in result:
+            parts = result.strip().split("|")
+            symbol = parts[0].strip()
+            company_name = parts[1].strip() if len(parts) > 1 else company
+            return (symbol, company_name)
         else:
-            print(f"[ERROR] Empty symbol result for company: {company}")
-            return company  # 심볼을 찾지 못하면 입력값 그대로 반환
+            print(f"[ERROR] Invalid stock info result for company: {company}")
+            return (company, company)  # 변환 실패 시 입력값 그대로 반환
 
     async def analyze_stock_with_mcp(self, symbol: str, company: str) -> str:
         """
@@ -141,13 +146,20 @@ class OpenAIAgent:
         Returns:
             AI가 생성한 분석 텍스트
         """
+        # 검색 가이드라인 생성
+        search_instruction = get_search_instruction()
+
         messages = [
             {
                 "role": "system",
-                "content": """당신은 전문 주식 투자 분석가입니다.
+                "content": f"""당신은 전문 주식 투자 분석가입니다.
 사용자가 제공한 주식 종목에 대해 단기, 중기, 장기로 구분하여 투자 의견을 제시해야 합니다.
 
 최신 정보가 필요하면 brave_web_search 도구를 사용하여 다음을 검색하세요:
+
+{search_instruction}
+
+검색할 정보:
 1. 최신 주가 동향 및 거래량
 2. 최근 뉴스 및 공시사항
 3. 경제/정치적 이슈

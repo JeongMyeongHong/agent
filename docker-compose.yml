@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  stock-invest-db:
+    image: postgres:15-alpine
+    container_name: stock-invest-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-stock_analysis}
+    ports:
+      - "35432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stock-network
+
+  # Stock Analysis API
+  stock-invest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-invest-api
+    restart: unless-stopped
+    ports:
+      - "38000:8000"
+    environment:
+      # OpenAI
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      # Brave Search
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
+
+      # Database (Production: 도커 내부 alias)
+      DB_HOST: ${DB_HOST:-stock-invest-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-stock_analysis}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    depends_on:
+      stock-invest-db:
+        condition: service_healthy
+    networks:
+      - stock-network
+    volumes:
+      - ./logs:/app/logs  # 로그 파일 마운트 (선택)
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  stock-network:
+    driver: bridge

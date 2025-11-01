@@ -1,0 +1,21 @@
+version: '3.8'
+
+# Local 환경용 - 외부 DB 사용 (API만 실행)
+services:
+  # Stock Analysis API
+  stock-invest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-invest-api-local
+    restart: unless-stopped
+    ports:
+      - "38000:8000"
+    env_file:
+      - .env.local
+    networks:
+      - stock-network
+
+networks:
+  stock-network:
+    driver: bridge

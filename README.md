@@ -30,17 +30,42 @@ BRAVE_API_KEY=your-brave-api-key-here
    - MCP를 통한 실시간 웹 검색 기능 활성화
    - 없으면 GPT-5의 기본 지식으로만 분석
 
-## 실행
+## 🚀 빠른 시작
+
+### 로컬 개발 (Docker 없이)
 
 ```bash
-# 서버 실행
-python main.py
+# 1. 의존성 설치
+uv sync
 
-# 또는 uvicorn 직접 실행
-uvicorn main:app --reload
+# 2. 실행
+./run.sh
+
+# 또는
+python main.py
 ```
 
-서버는 `http://localhost:8000`에서 실행됩니다.
+**접속:** http://localhost:8000
+
+### Docker로 실행
+
+```bash
+# Production (API + DB)
+./start-prod.sh
+
+# Local (API만, 외부 DB)
+./start-local.sh
+```
+
+**접속:** http://localhost:38000
+
+### 자세한 가이드
+
+- **[QUICKSTART.md](QUICKSTART.md)** - 1분 빠른 시작
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - 로컬 개발 가이드
+- **[DOCKER.md](DOCKER.md)** - Docker 상세 가이드
+
+---
 
 ## API 엔드포인트
 
