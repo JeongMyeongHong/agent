@@ -32,3 +32,7 @@ docker-compose.override.yml
 # Logs
 logs/
 *.log
+
+# Deployment (contains server credentials)
+remote-deploy.sh
+remote-deploy-with-password.sh

@@ -64,6 +64,57 @@ python main.py
 - **[QUICKSTART.md](QUICKSTART.md)** - 1분 빠른 시작
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - 로컬 개발 가이드
 - **[DOCKER.md](DOCKER.md)** - Docker 상세 가이드
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - 서버 배포 가이드
+
+---
+
+## 🌐 서버 배포
+
+### 원격 배포 (권장)
+
+로컬에서 원격 서버로 배포:
+
+```bash
+# 1. .env.prod 파일 준비
+cp .env.example .env.prod
+nano .env.prod  # API 키 입력
+
+# 2. 배포 실행
+./remote-deploy.sh
+```
+
+**디렉토리 구조 (서버):**
+```
+/root/stock-invest/
+├── api/              # API 코드 (볼륨 마운트)
+├── db/               # PostgreSQL 데이터 (볼륨 마운트)
+├── logs/             # 로그
+├── .env.prod         # 환경 변수 (자동 전송)
+└── docker-compose.yml
+```
+
+### 서버에서 직접 배포
+
+서버에서 한 줄로 배포:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/JeongMyeongHong/agent/main/deploy.sh | bash
+```
+
+### 업데이트
+
+```bash
+cd /root/stock-invest
+./update.sh
+```
+
+### 접속 정보
+
+- **API**: http://175.117.82.131:38000
+- **API Docs**: http://175.117.82.131:38000/docs
+- **DB Port**: 35432
+
+자세한 내용은 **[DEPLOYMENT.md](DEPLOYMENT.md)** 참고
 
 ---
 
