@@ -57,11 +57,9 @@ if [ -d "$DEPLOY_DIR/.git" ]; then
     git clean -fd
 else
     echo "   Cloning repository..."
-    rm -rf "$DEPLOY_DIR"
     git clone -b $BRANCH "$REPO_URL" "$DEPLOY_DIR"
+    cd "$DEPLOY_DIR"
 fi
-
-cd "$DEPLOY_DIR"
 
 # 4. 환경 변수 파일 확인
 echo ""
