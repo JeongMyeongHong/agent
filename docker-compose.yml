@@ -25,7 +25,7 @@ services:
   # Stock Analysis API
   stock-invest-api:
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile
     container_name: stock-invest-api
     restart: unless-stopped
