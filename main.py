@@ -26,6 +26,7 @@ app = FastAPI(
     version="1.0.0",
     description="OpenAI GPT-5를 사용한 주식 종합 분석 API",
     lifespan=lifespan,
+    root_path="/stock-invest",  # 리버스 프록시용 prefix
 )
 
 # 라우터 등록
@@ -37,7 +38,7 @@ async def root():
     return {
         "message": "Stock Analysis API is running",
         "version": "1.0.0",
-        "docs": "/docs",
+        "docs": "/stock-invest/docs",
     }
 
 
