@@ -23,32 +23,19 @@ echo "   Deploy Directory: $DEPLOY_DIR"
 echo "   Branch: $BRANCH"
 echo ""
 
-# 1. 배포 디렉토리 확인 및 생성
-echo "📁 Step 1: 배포 디렉토리 준비..."
-if [ ! -d "$DEPLOY_DIR" ]; then
-    echo "   Creating directory: $DEPLOY_DIR"
-    mkdir -p "$DEPLOY_DIR"
-fi
-
-# api, db 디렉토리 생성
-mkdir -p "$DEPLOY_DIR/api"
-mkdir -p "$DEPLOY_DIR/db"
-echo "   ✅ Created api and db directories"
-
-# 2. 기존 컨테이너 중지 (있다면)
-echo ""
-echo "🛑 Step 2: 기존 컨테이너 중지..."
-cd "$DEPLOY_DIR" 2>/dev/null || true
-if [ -f "docker-compose.yml" ]; then
+# 1. 기존 컨테이너 중지 (있다면)
+echo "📁 Step 1: 기존 배포 확인 및 중지..."
+if [ -d "$DEPLOY_DIR" ] && [ -f "$DEPLOY_DIR/docker-compose.yml" ]; then
     echo "   Stopping existing containers..."
+    cd "$DEPLOY_DIR"
     docker-compose down 2>/dev/null || echo "   No running containers found"
 else
     echo "   No existing deployment found"
 fi
 
-# 3. Git Clone 또는 Pull
+# 2. Git Clone 또는 Pull
 echo ""
-echo "📥 Step 3: 최신 코드 다운로드..."
+echo "📥 Step 2: 최신 코드 다운로드..."
 if [ -d "$DEPLOY_DIR/.git" ]; then
     echo "   Pulling latest changes..."
     cd "$DEPLOY_DIR"
@@ -57,9 +44,18 @@ if [ -d "$DEPLOY_DIR/.git" ]; then
     git clean -fd
 else
     echo "   Cloning repository..."
+    # 부모 디렉토리로 이동
+    cd "$(dirname "$DEPLOY_DIR")"
     git clone -b $BRANCH "$REPO_URL" "$DEPLOY_DIR"
     cd "$DEPLOY_DIR"
 fi
+
+# 3. 배포용 디렉토리 생성
+echo ""
+echo "📁 Step 3: 배포 디렉토리 준비..."
+mkdir -p "$DEPLOY_DIR/api"
+mkdir -p "$DEPLOY_DIR/db"
+echo "   ✅ Created api and db directories"
 
 # 4. 환경 변수 파일 확인
 echo ""
